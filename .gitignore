@@ -1,0 +1,90 @@
+# =========================
+# Dependencies
+# =========================
+node_modules
+**/node_modules
+
+.pnpm-store
+
+# =========================
+# Builds / Outputs
+# =========================
+dist
+build
+out
+.next
+coverage
+storybook-static
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode
+.idea
+*.swp
+*.swo
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Prisma / Database
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+prisma/migrations/dev.db
+prisma/migrations/*.db
+
+# =========================
+# Testing / Coverage
+# =========================
+coverage
+.nyc_output
+jest-cache
+
+# =========================
+# Monorepo / Tooling caches
+# =========================
+.turbo
+.cache
+.rpt2_cache
+.eslintcache
+
+# =========================
+# Docker
+# =========================
+.dockerignore
+docker-compose.override.yml
+
+# =========================
+# Misc
+# =========================
+.tmp
+temp
+.vercel
