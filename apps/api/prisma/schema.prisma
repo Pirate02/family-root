@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+admin
+editor
+viewer
+
+}
+enum Gender {
+male
+female
+others
+}
+
+enum Type {
+parent
+spouse
+}
+
+model User {
+
+id String @id @default(uuid())
+name String 
+email String @unique 
+passwordHash String 
+createdAt DateTime @default(now())
+
+member FamilyMember[]
+}
+
+model Family {
+
+id String @id @default(uuid())
+name String 
+createdAt DateTime @default(now())
+
+persons Persons[]
+members FamilyMember[]
+}
+
+model FamilyMember {
+familyId String 
+role Role
+userId String 
+
+family Family @relation(fields: [familyId], references: [id] )
+user User @relation(fields: [userId], references: [id])
+@@id([familyId, userId])
+
+}
+
+model Persons {
+id String @id @default(uuid())
+name String 
+gender Gender 
+picUrl String? 
+bio String? 
+dob DateTime? @db.Date
+dod DateTime? @db.Date
+familyId String 
+
+family Family @relation(fields: [familyId], references: [id])
+
+relation1 Relationship[] @relation("PersonA")
+relation2 Relationship[] @relation("PersonB")
+
+
+}
+
+model Relationship {
+personAId String 
+personBId String
+type Type
+
+personA Persons @relation("PersonA",fields: [personAId], references: [id])
+personB Persons @relation("PersonB",fields: [personBId], references: [id])
+@@id([personAId, personBId, type])
+
+}

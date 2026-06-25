@@ -184,3 +184,117 @@ AND TYPE =' parent' ) AND type = 'parent' AND r.person_b_id != 3 ;
 
 This gives the name for the coressponding id which is Priya. 
 
+
+
+========================
+
+
+## Session Notes — DB Design & Prisma Setup
+
+#### SQL Fundamentals
+
+Primary key — unique identifier for every row in a table. Never null, never duplicate. Postgres auto-creates an index on it.
+Foreign key — a column that holds another table's primary key value, creating a reference between rows. Postgres enforces that the referenced value must actually exist (referential integrity). Types must match exactly — INTEGER FK must reference an INTEGER PK.
+SERIAL — Postgres auto-increment integer type. Creates a hidden sequence that generates 1, 2, 3... automatically. Only the database can generate the next value.
+UUID — better choice for distributed apps. Can be generated anywhere (frontend, backend) without a database round trip. Use gen_random_uuid() in Postgres, crypto.randomUUID() in Node.
+Why DATE not VARCHAR for dates:
+
+VARCHAR accepts invalid dates silently
+DATE enables date math (CURRENT_DATE - dob for age)
+DATE indexes and compares correctly
+VARCHAR is string comparison, not date comparison
+
+NOT NULL — enforces a column can never be empty. Apply to every column that must always have a value. Don't rely on application code to enforce this — let the database do it.
+UNIQUE — enforces no two rows can have the same value. Use on email in User table.
+Single quotes vs double quotes in SQL:
+
+'value' — string literal (data)
+"column_name" — identifier (table/column name)
+Never swap these — Postgres treats them as completely different things
+
+Always terminate SQL statements with ; — without it, psql keeps waiting for more input and swallows everything you type after.
+
+Relational Design
+One-to-many — put the foreign key on the "many" side. Example: many students, one course per student → course_id on students table.
+Many-to-many — needs a junction/join table. Example: students in multiple courses, courses with multiple students → enrollments(student_id, course_id) table.
+Self-referencing table — a foreign key that points back at the same table. Used for parent-child relationships where both sides are the same entity type (Person → Person).
+Don't store derived data. If a value can be correctly calculated from existing data, don't store it separately — it will drift and become inconsistent. Examples:
+
+isAlive derived from dod being null
+siblingOf derived from sharing a parent
+familyId on Relationship derived from the persons involved
+
+Composite primary key — primary key made of multiple columns combined. Used when no single column uniquely identifies a row but a combination does. Example: (person_a_id, person_b_id, type) on Relationship.
+ON DELETE RESTRICT — blocks deletion of a row if other rows reference it. Correct choice for family tree — don't silently cascade-delete a person's entire relationship history.
+INNER JOIN — combines rows from two tables where the join condition matches on both sides. Rows with no match are dropped entirely. NULL foreign keys never appear in an INNER JOIN result.
+LEFT JOIN — keeps all rows from the left table even if no match exists on the right. Use when you want "all X, with Y if it exists."
+DISTINCT — removes duplicate rows from results. Necessary when multiple paths through a graph lead to the same person (e.g. finding siblings when a person has two parents both pointing at the same sibling).
+Subqueries — a query nested inside another query. Use IN when the subquery returns multiple rows, = only when it returns exactly one row.
+
+Schema Design — FamilyRoot
+Five tables, why each exists:
+User — platform account. Authentication only. Completely separate from Person nodes in the tree.
+Family — the tree container. Has a name, owned indirectly through FamilyMember.
+FamilyMember — bridge between User and Family. Carries the role/permission. Composite PK on (userId, familyId). This is where authorization lives, not on Person.
+Persons — a node in the family tree. Biographical data only. Has familyId FK. Independent of who is a platform user.
+Relationship — edges between person nodes. Only two primitives: parent and spouse. All other relationships (sibling, grandparent, uncle, cousin) are derived at query time by traversing these two.
+Why User and Person are separate concepts: a deceased ancestor is a Person node but can never be a User. A family historian might be a User managing a tree without being a Person in it. Conflating them forces every tree node to have an account — absurd.
+Why FamilyMember exists separately from Persons: Persons answers "who exists in this tree as a node." FamilyMember answers "which platform users have access to this tree and what can they do." Different questions, different tables.
+RBAC — Role Based Access Control: admin owns and manages the tree. editor can add/edit persons and relationships. viewer can only read. Check membership + role on every API request before returning data.
+Authorization check pattern:
+sqlSELECT role FROM "FamilyMember" 
+WHERE "userId" = <from JWT> AND "familyId" = <from request>;
+No row = 403 Forbidden. Row exists = check role against required permission.
+
+Prisma 7 Specifics
+prisma.config.ts — configures the Prisma CLI (migrate, generate, studio). Reads DATABASE_URL here.
+schema.prisma — defines models and enums only. No url in datasource in Prisma 7 — that moved to prisma.config.ts.
+PrismaClient in Prisma 7 — requires a driver adapter:
+ts
+
+
+
+import { PrismaClient } from './generated/prisma/client.js'
+import { PrismaPg } from '@prisma/adapter-pg'
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const prisma = new PrismaClient({ adapter })
+export default prisma;
+
+
+Single prisma instance — never instantiate PrismaClient multiple times. One db.ts file, import it everywhere.
+dotenv/config must be the first import in your entry point — before anything that reads process.env, including your db.ts import.
+prisma migrate dev — four things in sequence:
+
+Compares schema against current database state
+Generates a .sql migration file in prisma/migrations/
+Runs that SQL against the database
+Regenerates the Prisma Client
+
+Migration files are permanent — commit them to git. They're a full history of every schema change. Never delete them.
+prisma migrate reset — drops everything and replays all migrations from scratch. Development only. All data is lost.
+npx prisma validate — checks schema for errors without touching the database. Run this before every migrate.
+Prisma back-relations — every relation must be declared on both sides. The side without a FK column uses ModelName[] for one-to-many. Named relations (@relation("PersonA")) required when a model has multiple relations to the same target.
+@default(now()) — auto-sets timestamp on insert. Use on every createdAt field.
+DateTime? @db.Date — maps to Postgres DATE type (date only, no time). Use for dob and dod.
+
+General Principles Reinforced
+
+No error ≠ correct. Read the actual output.
+Fix one thing at a time. Changing multiple things at once makes it impossible to know what fixed what.
+Don't store derived data — one source of truth.
+Use the most specific type the database offers — DATE not VARCHAR, UUID not TEXT for ids, enum not VARCHAR for fixed value sets.
+The database enforces structure and types. Business logic (parent must be older than child) is your application's responsibility.
+Paste verbatim output, not summaries. Tools tell you exactly what's wrong — read them.
+
+
+
+
+
+## Upto now :
+
+Init pnpm monorepo ✓
+Set up Vite + React + TS + Tailwind in web ✓
+Set up Express + TS in api ✓
+Design and migrate Prisma schema ✓
+Design tokens (still pending)
