@@ -36,3 +36,11 @@ export const createPersonSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
     .optional(),
 });
+
+export const createRelationshipSchema = z.object({
+
+  personAId: z.string(),
+  personBId: z.string(),
+  type: z.enum(["parent","spouse"])
+
+})
