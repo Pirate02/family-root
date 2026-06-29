@@ -9,3 +9,11 @@ export interface Person {
   dod?: string
 
 }
+
+export interface Family {
+
+   
+  
+
+
+}
