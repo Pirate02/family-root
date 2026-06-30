@@ -1,13 +1,10 @@
-import './App.css'
+import TreeCanvas from "./components/tree/treeCanvas";
 
 function App() {
-
   return (
-    <>
-    <p>This is family root </p>
-    </>
-
-  )
+    <TreeCanvas/>
+  );
 }
 
-export default App
+
+export default App;
