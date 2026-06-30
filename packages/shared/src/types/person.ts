@@ -3,10 +3,11 @@ export interface Person {
   id: string,
   name: string,
   gender : 'male'| 'female' | 'others',
-  bio: string,
-  picUrl?: string, 
+  bio: string | null,
+  picUrl: string | null, 
   dob: string,
-  dod?: string
+  dod: string | null,
+  familyId: string
 
 }
 

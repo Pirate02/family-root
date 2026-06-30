@@ -25,7 +25,7 @@ const PersonNode = ({ data }: { data: PersonNodeData }) => {
       )}
 
       <h1 className="mt-2 text-sm font-medium">{person.name}</h1>
-      <p className="text-xs text-gray-500">{person.dob}</p>
+      <p className="text-xs text-gray-500">{person.dob.split('T')[0]}</p>
       {person.bio && <p className="text-xs mt-1">{person.bio}</p>}
 
       <Handle type="source" position={Position.Bottom} />
