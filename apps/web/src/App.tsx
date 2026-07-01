@@ -1,18 +1,21 @@
-import TreeCanvas from "./components/tree/treeCanvas";
-
-
+import { Routes, Route } from "react-router";
+import Login from "./pages/LoginPage";
+import Register from "./pages/RegisterPage";
+import TreePage from "./pages/TreePage";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-
     <>
 
-    <TreeCanvas familyId="8c1c3642-0ab7-438c-960b-30b51ccca3d7"/>
-
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/tree/:id" element={<TreePage />} />
+        <Route path="/" element={<Dashboard/>} />
+      </Routes>
     </>
-
-
-  )
+  );
 }
 
 export default App;
