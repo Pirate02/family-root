@@ -11,8 +11,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/tree/:id" element={<TreePage />} />
-        <Route path="/" element={<Dashboard/>} />
+        <Route path="/family/:id" element={<TreePage />} />
+        <Route path="/dashboard" element={<Dashboard/>} />
       </Routes>
     </>
   );

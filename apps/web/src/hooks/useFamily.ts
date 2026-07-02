@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../lib/api";
-import type { Person, RelationshipEdge } from "@familyroot/shared";
+import type { FamilyMembership, Person, RelationshipEdge } from "@familyroot/shared";
 
 export const usePersons = (familyId: string) => {
   return useQuery({
@@ -21,3 +21,17 @@ export const useRelationships = (familyId: string) => {
     },
   });
 };
+
+
+export const useFamilies = ()=> {
+  return useQuery({
+    queryKey: ['families'],
+    queryFn: async ()=> {
+      const res = await api.get('/families/mine')
+      return res.data.data as FamilyMembership[];
+
+    }
+
+  })
+
+}

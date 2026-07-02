@@ -1,11 +1,16 @@
+import { useParams } from "react-router";
+import TreeCanvas from "../components/tree/TreeCanvas"
 
 
 
 const TreePage =()=> {
 
-  return (
+  const {id} = useParams()
 
-    <h1>Tree</h1>
+
+  return (
+    <TreeCanvas familyId={id!} />
+
 
   )
 

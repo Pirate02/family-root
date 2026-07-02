@@ -12,9 +12,14 @@ export interface Person {
 }
 
 export interface Family {
+  id:string,
+  name: string
+}
 
-   
-  
-
+export interface FamilyMembership {
+  familyId: string,
+  userId: string,
+  role: "admin"|"editor"|"viewer",
+  family: Family
 
 }
