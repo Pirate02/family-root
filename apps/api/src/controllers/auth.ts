@@ -33,9 +33,11 @@ export const register = async (req: Request, res: Response) => {
     });
 
     const { passwordHash: _, ...safeUser } = user; // take hashpassword from user; put it in the variable _ and the rest into ...safeUser .
+    const token = jwt.sign({userId: user.id, email: user.email},process.env.JWT_SECRET!, {expiresIn: '7d'})
 
     res.status(201).json({
       user: safeUser,
+      token: token,
       message: "User created successfully.",
     });
   } catch (error) {
