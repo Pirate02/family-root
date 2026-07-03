@@ -6,7 +6,7 @@ const Dashboard = () => {
   const {data: families , isLoading} = useFamilies();
   const navigate = useNavigate();
 
-  if(isLoading ) return <div> Loadgin.. </div>
+  if(isLoading ) return <div>Loading ... </div>
  
 
 

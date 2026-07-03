@@ -297,7 +297,7 @@ export const getMyFamilies = async(req:Request,res: Response)=> {
 
     const families = await prisma.familyMember.findMany({where: {userId}, include: {family: true}})
     if(families.length === 0){
-      return res.status(404).json({message: "You are no associated with any family"})
+      return res.status(200).json({message: "You are no associated with any family", data: families})
 
     }
 

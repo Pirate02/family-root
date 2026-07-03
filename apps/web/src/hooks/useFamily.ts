@@ -30,7 +30,9 @@ export const useFamilies = ()=> {
       const res = await api.get('/families/mine')
       return res.data.data as FamilyMembership[];
 
-    }
+    },
+    staleTime : 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
 
   })
 
