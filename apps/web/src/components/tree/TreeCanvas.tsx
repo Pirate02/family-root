@@ -8,6 +8,8 @@ import { usePersons, useRelationships } from "../../hooks/useFamily";
 import PersonNode from "./PersonNode";
 
 import { computeLayout } from "../../lib/layout";
+import type { Person } from "@familyroot/shared";
+import { useState } from "react";
 
 const nodeTypes = {
   personNode: PersonNode,
@@ -18,6 +20,12 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
   const { data: relationships, isLoading: relLoading } =
     useRelationships(familyId);
 
+
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
+
+  const [modalOpen, setModalOpen] = useState(false)
+
+
   const positions = computeLayout(persons ?? [], relationships ?? []);
 
   const personNodes = (persons ?? []).map((person) => {
@@ -27,7 +35,11 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
       id: person.id,
       type: "personNode",
       position: layout?.position ?? { x: 0, y: 0 },
-      data: { person },
+      data: { person, onAddRelative: (p: person) => {
+        setSelectedPerson(p),
+        setModalOpen(true)
+
+      } },
     };
   });
 
