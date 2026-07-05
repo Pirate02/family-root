@@ -7,62 +7,46 @@ import {
 import { usePersons, useRelationships } from "../../hooks/useFamily";
 import PersonNode from "./PersonNode";
 
-
+import { computeLayout } from "../../lib/layout";
 
 const nodeTypes = {
-  personNode : PersonNode
+  personNode: PersonNode,
+};
 
-}
+const TreeCanvas = ({ familyId }: { familyId: string }) => {
+  const { data: persons, isLoading: personLoading } = usePersons(familyId);
+  const { data: relationships, isLoading: relLoading } =
+    useRelationships(familyId);
 
+  const positions = computeLayout(persons ?? [], relationships ?? []);
 
-const TreeCanvas = ({familyId}:{familyId: string}) => {
+  const personNodes = (persons ?? []).map((person) => {
+    const layout = positions.find((p) => p.id === person.id);
 
+    return {
+      id: person.id,
+      type: "personNode",
+      position: layout?.position ?? { x: 0, y: 0 },
+      data: { person },
+    };
+  });
 
-  const {data: persons, isLoading: personLoading } = usePersons(familyId)
-  const {data: relationships, isLoading: relLoading} = useRelationships(familyId)
+  const relationshipEdge = (relationships ?? []).map((relation) => ({
+    id: `${relation.source}-${relation.target}-${relation.type}`,
+    source: relation.source,
+    target: relation.target,
+  }));
 
-  const personNode = persons?.map((person,i) => ({
-
-    id: person.id,
-    type: 'personNode',
-    position: {x: 0, y: i*200},
-    data: {
-      person: {
-        id: person.id,
-        name: person.name,
-        gender: person.gender,
-        bio: person.bio,
-        picUrl: person.picUrl,
-        dob: person.dob,
-        dod: person.dod,
-        familyId: person.familyId
-
-      }
-
-    }
-  }
-
-
-  ))
-
-  const relationshipEdge = relationships?.map((relation,i)=> (
-    {
-      id:`e-${i}`,
-      source: relation.source,
-      target: relation.target
-
-
-    }
-
-  ))
-
-
-
-  if(personLoading || relLoading) return <div> Loading ..</div>
+  if (personLoading || relLoading) return <div> Loading ..</div>;
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <ReactFlowProvider>
-        <ReactFlow fitView nodes={personNode} edges={relationshipEdge} nodeTypes={nodeTypes}>
+        <ReactFlow
+          fitView
+          nodes={personNodes}
+          edges={relationshipEdge}
+          nodeTypes={nodeTypes}
+        >
           <Background />
           <Controls />
         </ReactFlow>
