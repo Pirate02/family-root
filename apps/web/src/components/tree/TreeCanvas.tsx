@@ -10,6 +10,7 @@ import PersonNode from "./PersonNode";
 import { computeLayout } from "../../lib/layout";
 import type { Person } from "@familyroot/shared";
 import { useState } from "react";
+import AddPersonModal from "./AddPersonModal";
 
 const nodeTypes = {
   personNode: PersonNode,
@@ -35,9 +36,10 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
       id: person.id,
       type: "personNode",
       position: layout?.position ?? { x: 0, y: 0 },
-      data: { person, onAddRelative: (p: person) => {
-        setSelectedPerson(p),
+      data: { person, onAddRelative: (p: Person) => {
+        setSelectedPerson(p);
         setModalOpen(true)
+        console.log(p)
 
       } },
     };
@@ -62,7 +64,18 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
           <Background />
           <Controls />
         </ReactFlow>
-      </ReactFlowProvider>
+        </ReactFlowProvider>
+        {modalOpen && selectedPerson && (
+          <AddPersonModal selectedPerson= {selectedPerson} familyId= {familyId} isOpen ={modalOpen} onClose={()=> {
+            setModalOpen(false)
+            setSelectedPerson(null)
+
+
+          }}/>
+
+
+
+        ) }
     </div>
   );
 };
