@@ -44,6 +44,83 @@ export const createFamily = async (req: Request, res: Response) => {
   }
 };
 
+export const addRelative = async(req:Request<{id: string}>, res: Response)=> {
+
+  const familyId = req.params.id;
+
+  const {name, gender, bio, dob, dod, picUrl, relativeId, relationType}= req.body;
+
+  const personInfo = {
+    name,
+    gender,
+    bio,
+    dob,
+    dod,
+    picUrl
+
+  }
+
+  const relationshipInfo = {
+    relativeId,
+    relationType
+  }
+
+  const parsedPerson = createPersonSchema.safeParse(personInfo);
+  if(!parsedPerson.success){
+    return res.status(400).json({error: parsedPerson.error.issues })
+
+  }
+
+  if(!relativeId || !['parent','child','spouse'].includes(relationType)){
+    return res.status(400).json({error: 'Invalid relationship data '})
+
+  }
+
+
+  
+  try {
+
+    const result = await prisma.$transaction( async(tx)=> {
+
+      const person = await tx.persons.create({data: {
+        name: parsedPerson.data.name,
+        gender: parsedPerson.data.gender,
+        bio: parsedPerson.data.bio ?? null,
+        dob: new Date(parsedPerson.data.dob).toISOString(),
+        dod: parsedPerson.data.dod ? new Date(parsedPerson.data.dod).toISOString() : null,
+        picUrl: parsedPerson.data.picUrl ?? null,
+        familyId: familyId!
+
+      }})
+
+      await tx.relationship.create({
+        data: {
+          personAId: relationType === 'child' ? relativeId : person.id,
+          personBId: relationType === 'child' ? person.id : relativeId,
+          type: relationType === 'spouse' ? 'spouse' : 'parent'
+
+        }
+
+      })
+
+
+      return person;
+
+
+    })
+
+    return res.status(201).json({data: result})
+
+
+    
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({error: "Internal server error"})
+    
+  }
+
+}
+
 export const getFamily = async (
   req: Request<{ id: string }>,
   res: Response,

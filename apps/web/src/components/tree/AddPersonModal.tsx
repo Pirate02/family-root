@@ -1,7 +1,23 @@
 import type { Person } from "@familyroot/shared";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+
+
+interface PayloadType {
+  name: string,
+  gender: 'male' | 'female' | 'others',
+  bio: string | undefined,
+  dob: string,
+  dod: string | undefined,
+  picUrl: string | undefined,
+
+  relativeId: string,
+  relationType: 'parent' | 'child' | 'spouse'
+
+
+}
 
 const AddPersonModal = ({
   selectedPerson,
@@ -15,83 +31,94 @@ const AddPersonModal = ({
   onClose: () => void;
 }) => {
   const queryClient = useQueryClient();
-
   const [step, setStep] = useState("selectType");
+  const [isAlive, setIsAlive] = useState(true);
+  const [error, setError] = useState("");
 
-  const [personForm, setPersonForm] = useState({
-    name: "",
-    gender: "",
-    bio: "",
-    dob: "",
-    dod: "",
-    picUrl: "",
+  const [formData, setFormData] = useState<PayloadType>({
+    name: '',
+    gender: 'male',
+    bio:  undefined,
+    dob: '',
+    dod: undefined,
+    picUrl: undefined,
+
+    relativeId: selectedPerson.id,
+    relationType: 'parent'
   });
 
-  const [relationType, setRelationType] = useState("");
-
   const handleSubmit = async (e: React.SubmitEvent) => {
+
     e.preventDefault();
+    console.log("sending..",formData)
+
     try {
-      const res = await api.post(
-        `/families/${selectedPerson.familyId}/persons`,
-        personForm,
-      );
 
-      console.log(res);
-
-      const newPerson = res.data.data;
-
-      const relation = await api.post(
-        `/families/${selectedPerson.familyId}/relationships`,
-        {
-          personAId:
-            relationType === "child" ? selectedPerson.id : newPerson.id,
-          personBId:
-            relationType === "child" ? newPerson.id : selectedPerson.id,
-          type: relationType === "spouse" ? "spouse" : "parent",
-        },
-      );
-
-      queryClient.invalidateQueries({ queryKey: ["persons", familyId] });
-      queryClient.invalidateQueries({ queryKey: ["relationships", familyId] });
-      onClose();
-      console.log(relation);
+      const res = await api.post(`/families/${familyId}/add-relative`,formData)
+      console.log(res)
     } catch (err) {
-      console.log(err)
+      if (isAxiosError(err)) {
+        setError(err.message);
+      } else {
+        setError("something went wrong !");
+      }
 
+      console.log(err);
     }
   };
 
-  if(!isOpen) return null; 
+  useEffect(() => {
+
+    if (!isOpen) {
+    }
+
+
+
+  }, [isAlive])
+
+    
+
+  if (!isOpen) return null;
   return (
-    <div>
-      <div>
-        <button onClick={onClose}>X</button>
+    <div className="fixed inset-0 flex bg-black/50 items-center justify-center">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <button
+          onClick={onClose}
+          className="font-bold text-red-300 hover:cursor-pointer"
+        >
+          X
+        </button>
 
         {step === "selectType" ? (
-          <div>
-            <h2>Add relative to {selectedPerson.name}</h2>
+          <div className="flex flex-col gap-2 items-center">
+            <h2 className="font-bold">
+              Add relative to{" "}
+              <span className="text-primary">{selectedPerson.name}</span>
+            </h2>
             <button
               onClick={() => {
-                setRelationType("parent");
+                setFormData(prev=> ({...prev, relationType: "parent"}))
                 setStep("fillDetails");
               }}
+              className="hover:cursor-pointer font-bold"
             >
               Add Parent
             </button>
             <button
               onClick={() => {
-                setRelationType("child");
+                setFormData(prev=> ({...prev, relationType: 'child'}))
                 setStep("fillDetails");
               }}
+              className="hover:cursor-pointer font-bold"
             >
               Add Child
             </button>
             <button
               onClick={() => {
-                setRelationType("spouse");
+                setFormData(prev=> ({...prev, relationType: 'spouse'}))
                 setStep("fillDetails");
               }}
+              className="hover:cursor-pointer font-bold"
             >
               Add Spouse
             </button>
@@ -99,67 +126,125 @@ const AddPersonModal = ({
         ) : (
           <div>
             <form onSubmit={handleSubmit}>
-              <div>
-                <input
-                  type="text"
-                  name="name"
-                  value={personForm.name}
-                  onChange={(e) =>
-                    setPersonForm((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                />
-                <select
-                  name="gender"
-                  value={personForm.gender}
-                  onChange={(e) =>
-                    setPersonForm((prev) => ({
-                      ...prev,
-                      gender: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="">Select gender</option>
-                  <option value="male">male</option>
-                  <option value="female">female</option>
-                  <option value="others">others</option>
-                </select>
-                <input
-                  type="text"
-                  name="bio"
-                  value={personForm.bio}
-                  onChange={(e) =>
-                    setPersonForm((prev) => ({ ...prev, bio: e.target.value }))
-                  }
-                />
-                <input
-                  type="date"
-                  name="dob"
-                  value={personForm.dob}
-                  onChange={(e) =>
-                    setPersonForm((prev) => ({ ...prev, dob: e.target.value }))
-                  }
-                />
-                <input
-                  type="date"
-                  name="dod"
-                  value={personForm.dod}
-                  onChange={(e) =>
-                    setPersonForm((prev) => ({ ...prev, dod: e.target.value }))
-                  }
-                />
-                <input
-                  type="text"
-                  name="picUrl"
-                  value={personForm.picUrl}
-                  onChange={(e) =>
-                    setPersonForm((prev) => ({
-                      ...prev,
-                      picUrl: e.target.value,
-                    }))
-                  }
-                />
+              <div className="flex flex-col items-center justify-center gap-2">
+                <h1 className="font-bold">Add details</h1>
 
-                <button type="submit">Add person</button>
+                <div className="mt-1 flex flex-col w-full gap-1">
+                  <label htmlFor="name">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="border border-primary  p-2 rounded focus:outline-none"
+                    required
+                  />
+                </div>
+                <div className="mt-1 flex flex-col w-full gap-1">
+                  <label htmlFor="gender">gender</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        gender: e.target.value as 'male' | 'female' | 'others',
+                      }))
+                    }
+                    className="border border-primary  p-2 rounded focus:outline-none"
+                    required
+                  >
+                    <option value="">select gender</option>
+                    <option value="male">male</option>
+                    <option value="female">female</option>
+                    <option value="others">others</option>
+                  </select>
+                </div>
+                <div className="mt-1 flex flex-col w-full gap-1">
+                  <label htmlFor="bio">Bio</label>
+                  <input
+                    type="text"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        bio: e.target.value,
+                      }))
+                    }
+                    className="border border-primary  p-2 rounded focus:outline-none"
+                    placeholder="optional"
+                  />
+                </div>
+                <div className="mt-1 flex flex-col w-full gap-1">
+                  <label htmlFor="dob">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        dob: e.target.value,
+                      }))
+                    }
+                    className="border border-primary p-2 rounded focus:outline-none"
+                  />
+                </div>
+
+                <div className="w-full flex gap-2">
+                  <span>Is the person alive ? </span>
+                  <span>yes</span>
+                  <input
+                    type="radio"
+                    name="alive"
+                    checked={isAlive}
+                    onChange={() => {
+                      setIsAlive(true);
+                      setFormData((prev) => ({ ...prev, dod: "" }));
+                    }}
+                    value="yes"
+                  />
+                  <span>no</span>
+                  <input
+                    type="radio"
+                    name="alive"
+                    checked={!isAlive}
+                    onChange={() => setIsAlive(false)}
+                    value="no"
+                  />
+                </div>
+                {!isAlive && (
+                  <div className="mt-1 flex flex-col w-full gap-1">
+                    <label htmlFor="dod">Date of Death</label>{" "}
+                    <input
+                      type="date"
+                      name="dod"
+                      value={formData.dod}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          dod: e.target.value,
+                        }))
+                      }
+                      className="border border-primary p-2 rounded focus:outline-none"
+                    />
+                  </div>
+                )}
+
+                {error && <span>{error}</span>}
+
+                <button
+                  type="submit"
+                  className="mt-2 p-4 w-full text-xs text-primary border border-primary rounded rounded-xl hover:bg-primary-light"
+                >
+                  Add person
+                </button>
               </div>
             </form>
           </div>
