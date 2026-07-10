@@ -1,5 +1,5 @@
 import type { Person } from "@familyroot/shared";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import api from "../../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
@@ -50,11 +50,14 @@ const AddPersonModal = ({
   const handleSubmit = async (e: React.SubmitEvent) => {
 
     e.preventDefault();
-    console.log("sending..",formData)
 
     try {
 
       const res = await api.post(`/families/${familyId}/add-relative`,formData)
+      queryClient.invalidateQueries({queryKey: ['persons', familyId]})
+      queryClient.invalidateQueries({queryKey: ['relationships', familyId]})
+
+      onClose()
       console.log(res)
     } catch (err) {
       if (isAxiosError(err)) {
@@ -67,16 +70,6 @@ const AddPersonModal = ({
     }
   };
 
-  useEffect(() => {
-
-    if (!isOpen) {
-    }
-
-
-
-  }, [isAlive])
-
-    
 
   if (!isOpen) return null;
   return (

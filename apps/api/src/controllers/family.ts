@@ -44,11 +44,14 @@ export const createFamily = async (req: Request, res: Response) => {
   }
 };
 
-export const addRelative = async(req:Request<{id: string}>, res: Response)=> {
-
+export const addRelative = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   const familyId = req.params.id;
 
-  const {name, gender, bio, dob, dod, picUrl, relativeId, relationType}= req.body;
+  const { name, gender, bio, dob, dod, picUrl, relativeId, relationType } =
+    req.body;
 
   const personInfo = {
     name,
@@ -56,70 +59,52 @@ export const addRelative = async(req:Request<{id: string}>, res: Response)=> {
     bio,
     dob,
     dod,
-    picUrl
+    picUrl,
+  };
 
-  }
-
-  const relationshipInfo = {
-    relativeId,
-    relationType
-  }
 
   const parsedPerson = createPersonSchema.safeParse(personInfo);
-  if(!parsedPerson.success){
-    return res.status(400).json({error: parsedPerson.error.issues })
-
+  if (!parsedPerson.success) {
+    return res.status(400).json({ error: parsedPerson.error.issues });
   }
 
-  if(!relativeId || !['parent','child','spouse'].includes(relationType)){
-    return res.status(400).json({error: 'Invalid relationship data '})
-
+  if (!relativeId || !["parent", "child", "spouse"].includes(relationType)) {
+    return res.status(400).json({ error: "Invalid relationship data " });
   }
 
-
-  
   try {
-
-    const result = await prisma.$transaction( async(tx)=> {
-
-      const person = await tx.persons.create({data: {
-        name: parsedPerson.data.name,
-        gender: parsedPerson.data.gender,
-        bio: parsedPerson.data.bio ?? null,
-        dob: new Date(parsedPerson.data.dob).toISOString(),
-        dod: parsedPerson.data.dod ? new Date(parsedPerson.data.dod).toISOString() : null,
-        picUrl: parsedPerson.data.picUrl ?? null,
-        familyId: familyId!
-
-      }})
+    const result = await prisma.$transaction(async (tx) => {
+      const person = await tx.persons.create({
+        data: {
+          name: parsedPerson.data.name,
+          gender: parsedPerson.data.gender,
+          bio: parsedPerson.data.bio ?? null,
+          dob: new Date(parsedPerson.data.dob).toISOString(),
+          dod: parsedPerson.data.dod
+            ? new Date(parsedPerson.data.dod).toISOString()
+            : null,
+          picUrl: parsedPerson.data.picUrl ?? null,
+          familyId: familyId!,
+        },
+      });
 
       await tx.relationship.create({
         data: {
-          personAId: relationType === 'child' ? relativeId : person.id,
-          personBId: relationType === 'child' ? person.id : relativeId,
-          type: relationType === 'spouse' ? 'spouse' : 'parent'
-
-        }
-
-      })
-
+          personAId: relationType === "child" ? relativeId : person.id,
+          personBId: relationType === "child" ? person.id : relativeId,
+          type: relationType === "spouse" ? "spouse" : "parent",
+        },
+      });
 
       return person;
+    });
 
-
-    })
-
-    return res.status(201).json({data: result})
-
-
-    
+    return res.status(201).json({ data: result });
   } catch (error) {
-    console.error(error)
-    res.status(500).json({error: "Internal server error"})
-    
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-}
+};
 
 export const getFamily = async (
   req: Request<{ id: string }>,
@@ -346,17 +331,13 @@ export const getAllRelationships = async (
       },
     });
 
-
     return res.status(200).json({
-      data: relationships.map(r=>({
+      data: relationships.map((r) => ({
         source: r.personAId,
         target: r.personBId,
-        type: r.type
-
-      }))
-
-
-    })
+        type: r.type,
+      })),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -364,31 +345,25 @@ export const getAllRelationships = async (
   }
 };
 
-
-
-
-export const getMyFamilies = async(req:Request,res: Response)=> {
+export const getMyFamilies = async (req: Request, res: Response) => {
   const userId = req.userId!;
 
   try {
-
-    const families = await prisma.familyMember.findMany({where: {userId}, include: {family: true}})
-    if(families.length === 0){
-      return res.status(200).json({message: "You are no associated with any family", data: families})
-
+    const families = await prisma.familyMember.findMany({
+      where: { userId },
+      include: { family: true },
+    });
+    if (families.length === 0) {
+      return res
+        .status(200)
+        .json({
+          message: "You are no associated with any family",
+          data: families,
+        });
     }
 
-    res.status(200).json({data: families})
-    
+    res.status(200).json({ data: families });
   } catch (error) {
-    res.status(500).json({error: "Internal server error", err: error})
+    res.status(500).json({ error: "Internal server error", err: error });
   }
-
-
-}
-
-
-
-
-
-
+};

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
-import { createFamily, createPerson, createRelationship, getAllFamilyMembers, getAllRelationships, getFamily, getMyFamilies } from "../controllers/family.js";
+import { addRelative, createFamily, createPerson, createRelationship, getAllFamilyMembers, getAllRelationships, getFamily, getMyFamilies } from "../controllers/family.js";
 
 
 
@@ -15,5 +15,6 @@ router.post('/:id/persons', authenticate,createPerson )
 router.get('/:id/persons', authenticate, getAllFamilyMembers)
 router.post('/:id/relationships',authenticate, createRelationship)
 router.get('/:id/relationships',authenticate, getAllRelationships)
+router.post('/:id/add-relative',authenticate,addRelative)
 
 export default router;

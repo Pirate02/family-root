@@ -27,6 +27,7 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
   const [modalOpen, setModalOpen] = useState(false)
 
 
+
   const positions = computeLayout(persons ?? [], relationships ?? []);
 
   const personNodes = (persons ?? []).map((person) => {
@@ -39,7 +40,6 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
       data: { person, onAddRelative: (p: Person) => {
         setSelectedPerson(p);
         setModalOpen(true)
-        console.log(p)
 
       } },
     };
@@ -50,6 +50,7 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
     source: relation.source,
     target: relation.target,
   }));
+
 
   if (personLoading || relLoading) return <div> Loading ..</div>;
   return (
