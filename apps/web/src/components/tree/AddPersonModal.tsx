@@ -163,7 +163,7 @@ const AddPersonModal = ({
                   <input
                     type="text"
                     name="bio"
-                    value={formData.bio}
+                    value={formData.bio ?? ""}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,

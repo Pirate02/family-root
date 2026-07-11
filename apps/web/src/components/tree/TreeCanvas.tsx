@@ -40,6 +40,7 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
       data: { person, onAddRelative: (p: Person) => {
         setSelectedPerson(p);
         setModalOpen(true)
+        console.log(p)
 
       } },
     };

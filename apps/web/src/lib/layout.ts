@@ -1,75 +1,106 @@
 import type { Person, RelationshipEdge } from "@familyroot/shared";
+import dagre from "dagre";
 
-const HORIZONAL_GAP = 250;
-const VERTICAL_GAP = 200;
-
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 160;
+const SPOUSE_OFFSET = 250;
 
 export const computeLayout = (
   persons: Person[],
   relationships: RelationshipEdge[],
-) => {
-  const hasParent = new Set(
-    relationships.filter((r) => r.type === "parent").map((r) => r.target), // from the relationships give me those who have parents and only targets.
-  );
-  const roots = persons.filter(p => !hasParent.has(p.id))
+):{id: string; position: {x: number, y: number}}[] => {
 
 
+  const g = new dagre.graphlib.Graph();
 
-  const generationMap = new Map<String, number>()
 
-
-  roots.forEach(p => generationMap.set(p.id, 0)) // roots are generation zero - no parents 
-
-  // for each relationship child generation = parent's generation +1
-  relationships.filter(r => r.type === 'parent').forEach(r => {
-    const parentGen = generationMap.get(r.source) ?? 0
-    generationMap.set(r.target, parentGen + 1)
-
-  })
-
-  const byGeneration = new Map<number, Person[]>();
-
-  persons.forEach(p => {
-    const gen = generationMap.get(p.id) ?? -1  // -1 for disconnected 
-    if (!byGeneration.has(gen)) byGeneration.set(gen, [])
-    byGeneration.get(gen)!.push(p)
+  g.setGraph({
+    rankdir: 'TB', // top to bottom yo chai 
+    nodesep: 80,  // horizontal gap between nodes 
+    ranksep: 120, // vertical gap between geneerations 
+    edgesep: 20
 
 
   })
 
-  const positions: { id: string , position: {x:number, y:number}} [] = [];
+
+  g.setDefaultEdgeLabel(()=> ({}))
 
 
-  byGeneration.forEach((personsInGen, generation)=> {
-    const count = personsInGen.length;
+  // add all persons as node 
+  persons.forEach((p)=>{
 
-    personsInGen.forEach((p,index)=>{
-      positions.push({
-        id: p.id,
-        position: {
-          x: (index - (count-1)/2) * HORIZONAL_GAP,
-          y: generation * VERTICAL_GAP
+    g.setNode(p.id, {width: NODE_WIDTH, height: NODE_HEIGHT})
 
-        }
 
-      })
+  })
+
+
+  // add only parent node to dagre - spouse handled seperately 
+  relationships.filter(r => r.type === 'parent').forEach(r=> {
+    g.setEdge(r.source, r.target)
+
+  })
+
+  dagre.layout(g)
+
+
+  // first pass get dagree position for all nodes 
+  const positions: {id: string; position: {x: number; y: number}}[]=[]
+
+
+  persons.forEach(p=> {
+    const node = g.node(p.id)
+
+    positions.push({
+      id: p.id,
+      position: {
+        x: node.x - NODE_WIDTH/2,
+        y: node.y - NODE_HEIGHT/2
+
+      }
 
     })
+  })
+
+
+  // second pass position spouse beside their partners 
+
+
+  relationships.filter(r => r.type ==='spouse').forEach(r=> {
+
+    const posA = positions.find(p=> p.id === r.source);
+    const posB = positions.find(p=> p.id === r.target);
+
+    if(!posA || !posB) return;
+
+    // those who have parent 
+    const aHasParent = relationships.some(rel => rel.type === 'parent' && rel.target === r.source)
+    const bHasParent = relationships.some(rel => rel.type === 'parent' && rel.target === r.target)
+
+
+
+    if(bHasParent && !aHasParent) {
+      // B's position is correct 
+
+      posA.position = {x:posB.position.x + SPOUSE_OFFSET , y: posB.position.y}
+    } else if(aHasParent && !bHasParent){
+
+      posB.position  = {x: posA.position.x + SPOUSE_OFFSET, y: posA.position.y}
+
+    }
+
+
+
+
 
   })
 
-  return positions;
 
 
 
-
+return positions;
 
 
 
 };
-
-
-
-
-
-
