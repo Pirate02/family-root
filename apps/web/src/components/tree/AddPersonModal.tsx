@@ -4,19 +4,16 @@ import api from "../../lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 
-
 interface PayloadType {
-  name: string,
-  gender: 'male' | 'female' | 'others',
-  bio: string | undefined,
-  dob: string,
-  dod: string | undefined,
-  picUrl: string | undefined,
+  name: string;
+  gender: "male" | "female" | "others";
+  bio: string | undefined;
+  dob: string;
+  dod: string | undefined;
+  picUrl: string | undefined;
 
-  relativeId: string,
-  relationType: 'parent' | 'child' | 'spouse'
-
-
+  relativeId: string;
+  relationType: "parent" | "child" | "spouse";
 }
 
 const AddPersonModal = ({
@@ -24,41 +21,60 @@ const AddPersonModal = ({
   familyId,
   isOpen,
   onClose,
+  isFirstPerson,
 }: {
-  selectedPerson: Person;
+  selectedPerson?: Person;
   familyId: string;
   isOpen: boolean;
   onClose: () => void;
+  isFirstPerson: boolean;
 }) => {
   const queryClient = useQueryClient();
-  const [step, setStep] = useState("selectType");
+  const [step, setStep] = useState<"fillDetails" | "selectType">(
+    isFirstPerson ? "fillDetails" : "selectType",
+  );
   const [isAlive, setIsAlive] = useState(true);
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState<PayloadType>({
-    name: '',
-    gender: 'male',
-    bio:  undefined,
-    dob: '',
+    name: "",
+    gender: "male",
+    bio: undefined,
+    dob: "",
     dod: undefined,
     picUrl: undefined,
 
-    relativeId: selectedPerson.id,
-    relationType: 'parent'
+    relativeId: selectedPerson ? selectedPerson.id : "",
+    relationType: "parent",
   });
 
   const handleSubmit = async (e: React.SubmitEvent) => {
-
     e.preventDefault();
 
     try {
+      if (isFirstPerson) {
+        const res = await api.post(`/families/${familyId}/persons`, {
+          name: formData.name,
+          gender: formData.gender,
+          bio: formData.bio,
+          dob: formData.dob,
+          dod: formData.dod,
+          picUrl: formData.picUrl,
+        });
 
-      const res = await api.post(`/families/${familyId}/add-relative`,formData)
-      queryClient.invalidateQueries({queryKey: ['persons', familyId]})
-      queryClient.invalidateQueries({queryKey: ['relationships', familyId]})
+        console.log(res);
+      } else {
+        const res = await api.post(
+          `/families/${familyId}/add-relative`,
+          formData,
+        );
+        console.log(res);
+      }
 
-      onClose()
-      console.log(res)
+      queryClient.invalidateQueries({ queryKey: ["persons", familyId] });
+      queryClient.invalidateQueries({ queryKey: ["relationships", familyId] });
+
+      onClose();
     } catch (err) {
       if (isAxiosError(err)) {
         setError(err.message);
@@ -69,7 +85,6 @@ const AddPersonModal = ({
       console.log(err);
     }
   };
-
 
   if (!isOpen) return null;
   return (
@@ -84,13 +99,19 @@ const AddPersonModal = ({
 
         {step === "selectType" ? (
           <div className="flex flex-col gap-2 items-center">
-            <h2 className="font-bold">
-              Add relative to{" "}
-              <span className="text-primary">{selectedPerson.name}</span>
-            </h2>
+            {selectedPerson && (
+              <h2 className="font-bold">
+                Add relative to{" "}
+                <span className="text-primary">{selectedPerson.name}</span>
+              </h2>
+            )}
+
+            {isFirstPerson && (
+              <h2 className="font-bold">Add person's details</h2>
+            )}
             <button
               onClick={() => {
-                setFormData(prev=> ({...prev, relationType: "parent"}))
+                setFormData((prev) => ({ ...prev, relationType: "parent" }));
                 setStep("fillDetails");
               }}
               className="hover:cursor-pointer font-bold"
@@ -99,7 +120,7 @@ const AddPersonModal = ({
             </button>
             <button
               onClick={() => {
-                setFormData(prev=> ({...prev, relationType: 'child'}))
+                setFormData((prev) => ({ ...prev, relationType: "child" }));
                 setStep("fillDetails");
               }}
               className="hover:cursor-pointer font-bold"
@@ -108,7 +129,7 @@ const AddPersonModal = ({
             </button>
             <button
               onClick={() => {
-                setFormData(prev=> ({...prev, relationType: 'spouse'}))
+                setFormData((prev) => ({ ...prev, relationType: "spouse" }));
                 setStep("fillDetails");
               }}
               className="hover:cursor-pointer font-bold"
@@ -146,7 +167,7 @@ const AddPersonModal = ({
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        gender: e.target.value as 'male' | 'female' | 'others',
+                        gender: e.target.value as "male" | "female" | "others",
                       }))
                     }
                     className="border border-primary  p-2 rounded focus:outline-none"

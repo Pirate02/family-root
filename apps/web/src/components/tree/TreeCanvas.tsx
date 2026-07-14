@@ -21,12 +21,11 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
   const { data: relationships, isLoading: relLoading } =
     useRelationships(familyId);
 
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const [modalOpen, setModalOpen] = useState(false)
-
-
+  const isFirstPerson = (persons?.length ?? 0) === 0;
 
   const positions = computeLayout(persons ?? [], relationships ?? []);
 
@@ -37,12 +36,14 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
       id: person.id,
       type: "personNode",
       position: layout?.position ?? { x: 0, y: 0 },
-      data: { person, onAddRelative: (p: Person) => {
-        setSelectedPerson(p);
-        setModalOpen(true)
-        console.log(p)
-
-      } },
+      data: {
+        person,
+        onAddRelative: (p: Person) => {
+          setSelectedPerson(p);
+          setModalOpen(true);
+          console.log(p);
+        },
+      },
     };
   });
 
@@ -52,8 +53,32 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
     target: relation.target,
   }));
 
-
   if (personLoading || relLoading) return <div> Loading ..</div>;
+
+  if (persons?.length === 0) {
+    return (
+      <>
+        <div className="flex items-center justify-center h-screen">
+          <button
+            onClick={() => setModalOpen(true)}
+            className="border border-primary rounded-xl p-4"
+          >
+            + Add your first family member
+          </button>
+        </div>
+
+        {modalOpen && (
+          <AddPersonModal
+            familyId={familyId}
+            isOpen={modalOpen}
+            isFirstPerson={true}
+            onClose={() => setModalOpen(false)}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <ReactFlowProvider>
@@ -66,18 +91,19 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
           <Background />
           <Controls />
         </ReactFlow>
-        </ReactFlowProvider>
-        {modalOpen && selectedPerson && (
-          <AddPersonModal selectedPerson= {selectedPerson} familyId= {familyId} isOpen ={modalOpen} onClose={()=> {
-            setModalOpen(false)
-            setSelectedPerson(null)
-
-
-          }}/>
-
-
-
-        ) }
+      </ReactFlowProvider>
+      {modalOpen && selectedPerson && (
+        <AddPersonModal
+          selectedPerson={selectedPerson}
+          familyId={familyId}
+          isOpen={modalOpen}
+          isFirstPerson={isFirstPerson}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedPerson(null);
+          }}
+        />
+      )}
     </div>
   );
 };

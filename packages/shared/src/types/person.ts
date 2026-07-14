@@ -23,3 +23,10 @@ export interface FamilyMembership {
   family: Family
 
 }
+
+
+export interface CreateFamilyDto {
+  name: string
+
+
+}
