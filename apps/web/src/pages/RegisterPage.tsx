@@ -43,7 +43,7 @@ const Register = () => {
       const res = await api.post('/auth/register',formData)
       console.log(res.data)
       localStorage.setItem('token', res.data.token)
-      navigate('/dashboard')
+      navigate('/')
       
     } catch (err) {
       if(axios.isAxiosError(err)){

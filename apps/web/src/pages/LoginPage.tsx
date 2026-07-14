@@ -22,7 +22,7 @@ const Login = () => {
       console.log(response.data);
       localStorage.setItem('token', response.data.token)
 
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setError(error.response?.data.error);

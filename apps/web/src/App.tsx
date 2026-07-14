@@ -3,16 +3,23 @@ import Login from "./pages/LoginPage";
 import Register from "./pages/RegisterPage";
 import TreePage from "./pages/TreePage";
 import Dashboard from "./pages/Dashboard";
+import ProtectedRoutes from "./components/ProtectedRoutes";
 
 function App() {
   return (
     <>
-
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/family/:id" element={<TreePage />} />
-        <Route path="/dashboard" element={<Dashboard/>} />
+        <Route
+          path="/family/:id"
+          element={
+            <ProtectedRoutes>
+              <TreePage />
+            </ProtectedRoutes>
+          }
+        />
+        <Route path="/" element={<Dashboard />} />
       </Routes>
     </>
   );
