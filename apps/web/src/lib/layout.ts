@@ -1,9 +1,9 @@
 import type { Person, RelationshipEdge } from "@familyroot/shared";
 import dagre from "dagre";
 
-const NODE_WIDTH = 200;
+const NODE_WIDTH = 250;
 const NODE_HEIGHT = 160;
-const SPOUSE_OFFSET = 250;
+const SPOUSE_OFFSET = 150;
 
 export const computeLayout = (
   persons: Person[],

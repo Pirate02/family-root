@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+.react-flow__pane {
+  cursor:default !important;
+
+}
+.react-flow__node{
+  cursor:default !important;
+
+}
+
 *{
   box-sizing: border-box;
 

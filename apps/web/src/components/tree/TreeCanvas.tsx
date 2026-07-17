@@ -1,9 +1,4 @@
-import {
-  Background,
-  Controls,
-  ReactFlow,
-  ReactFlowProvider,
-} from "@xyflow/react";
+import { Controls, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import { usePersons, useRelationships } from "../../hooks/useFamily";
 import PersonNode from "./PersonNode";
 
@@ -11,12 +6,14 @@ import { computeLayout } from "../../lib/layout";
 import type { Person } from "@familyroot/shared";
 import { useState } from "react";
 import AddPersonModal from "./AddPersonModal";
+import PersonSidePanle from "../ui/PersonSidePanle";
 
 const nodeTypes = {
   personNode: PersonNode,
 };
 
 const TreeCanvas = ({ familyId }: { familyId: string }) => {
+  const [sidePanelPerson, setSidePanelPerson] = useState<Person | null>(null);
   const { data: persons, isLoading: personLoading } = usePersons(familyId);
   const { data: relationships, isLoading: relLoading } =
     useRelationships(familyId);
@@ -43,6 +40,8 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
           setModalOpen(true);
           console.log(p);
         },
+
+        onSelect: (p: Person) => setSidePanelPerson(p),
       },
     };
   });
@@ -51,6 +50,11 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
     id: `${relation.source}-${relation.target}-${relation.type}`,
     source: relation.source,
     target: relation.target,
+    style:
+      relation.type === "parent"
+        ? { stroke: "#B4B14A", strokeWidth: 2 }
+        : { stroke: "#4A7C59", strokeDasharray: "5,5" },
+    type: "smoothstep",
   }));
 
   if (personLoading || relLoading) return <div> Loading ..</div>;
@@ -80,7 +84,7 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
   }
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh", background: "#faf6f0" }}>
       <ReactFlowProvider>
         <ReactFlow
           fitView
@@ -88,7 +92,6 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
           edges={relationshipEdge}
           nodeTypes={nodeTypes}
         >
-          <Background />
           <Controls />
         </ReactFlow>
       </ReactFlowProvider>
@@ -102,6 +105,15 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
             setModalOpen(false);
             setSelectedPerson(null);
           }}
+        />
+      )}
+
+      {sidePanelPerson && (
+        <PersonSidePanle
+          person={sidePanelPerson}
+          persons={persons ?? []}
+          relationships={relationships ?? []}
+          onClose={() => setSidePanelPerson(null)}
         />
       )}
     </div>

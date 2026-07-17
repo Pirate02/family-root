@@ -4,16 +4,23 @@ import { Handle, Position } from "@xyflow/react";
 interface PersonNodeData {
   person: Person;
   onAddRelative: (person: Person) => void;
+  onSelect: (person: Person) => void;
 }
 
 const PersonNode = ({ data }: { data: PersonNodeData }) => {
   const { person } = data;
 
   return (
-    <div className="min-w-12 max-w-36 rounded-xl border border-primary bg-white p-4 shadow-lg text-center">
+    <div
+      onClick={() => data.onSelect(data.person)}
+      className="min-w-12 max-w-36 rounded-xl border border-primary bg-white p-4 shadow-lg text-center "
+    >
       <button
-        onClick={() => data.onAddRelative(data.person)}
-        className="mt-2 text-xs text-primary border border-primary rounded px-2 py-1 hover:bg-primary-light"
+        onClick={(e) => {
+          e.stopPropagation(); // prevents card click from firing 
+          data.onAddRelative(data.person);
+        }}
+        className="mt-2 text-xs text-primary border border-primary rounded px-2 py-1 hover:bg-primary-light cursor-pointer"
       >
         + Add Relative
       </button>
