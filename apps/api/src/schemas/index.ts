@@ -26,15 +26,15 @@ export const createFamilySchema = z.object({
 export const createPersonSchema = z.object({
   name: z.string().min(1, "name is requied"),
   gender: z.enum(["male", "female", "others"]),
-  picUrl: z.string().optional(),
-  bio: z.string().optional(),
+  picUrl: z.string().optional().nullish(),
+  bio: z.string().optional().nullish(),
   dob: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   dod: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
-    .optional(),
+    .optional().nullish(),
 });
 
 export const createRelationshipSchema = z.object({

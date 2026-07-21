@@ -1,16 +1,16 @@
 import type { Person } from "@familyroot/shared";
 import { useState } from "react";
-import api from "../../lib/api";
-import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
+import { useAddRelative, useCreateFirstPerson } from "../../hooks/useFamily";
+import { toast } from "sonner";
 
 interface PayloadType {
   name: string;
   gender: "male" | "female" | "others";
-  bio: string | undefined;
+  bio: string | null;
   dob: string;
-  dod: string | undefined;
-  picUrl: string | undefined;
+  dod: string | null;
+  picUrl: string | null;
 
   relativeId: string;
   relationType: "parent" | "child" | "spouse";
@@ -29,20 +29,23 @@ const AddPersonModal = ({
   onClose: () => void;
   isFirstPerson: boolean;
 }) => {
-  const queryClient = useQueryClient();
+  const { mutate: addFirstPerson, isPending: isCreatingFirstPerson } =
+    useCreateFirstPerson(familyId);
+  const { mutate: addRelative, isPending: isAddingRelative } =
+    useAddRelative(familyId);
+
   const [step, setStep] = useState<"fillDetails" | "selectType">(
     isFirstPerson ? "fillDetails" : "selectType",
   );
   const [isAlive, setIsAlive] = useState(true);
-  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState<PayloadType>({
     name: "",
     gender: "male",
-    bio: undefined,
+    bio: null,
     dob: "",
-    dod: undefined,
-    picUrl: undefined,
+    dod: null,
+    picUrl: null,
 
     relativeId: selectedPerson ? selectedPerson.id : "",
     relationType: "parent",
@@ -51,38 +54,41 @@ const AddPersonModal = ({
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
-    try {
-      if (isFirstPerson) {
-        const res = await api.post(`/families/${familyId}/persons`, {
+    const handleMutationError = (err: unknown) => {
+      if (isAxiosError(err)) {
+        toast.error(err.message);
+      } else {
+        toast.error("something went wrong");
+      }
+      console.log(err);
+    };
+
+    if (isFirstPerson) {
+      addFirstPerson(
+        {
           name: formData.name,
           gender: formData.gender,
           bio: formData.bio,
           dob: formData.dob,
           dod: formData.dod,
           picUrl: formData.picUrl,
-        });
-
-        console.log(res);
-      } else {
-        const res = await api.post(
-          `/families/${familyId}/add-relative`,
-          formData,
-        );
-        console.log(res);
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["persons", familyId] });
-      queryClient.invalidateQueries({ queryKey: ["relationships", familyId] });
-
-      onClose();
-    } catch (err) {
-      if (isAxiosError(err)) {
-        setError(err.message);
-      } else {
-        setError("something went wrong !");
-      }
-
-      console.log(err);
+        },
+        {
+          onSuccess: () => {
+            toast.success("Person added successfully");
+            onClose();
+          },
+          onError: handleMutationError,
+        },
+      );
+    } else {
+      addRelative(formData, {
+        onSuccess: () => {
+          toast.success("Person added successfull ");
+          onClose();
+        },
+        onError: handleMutationError,
+      });
     }
   };
 
@@ -239,7 +245,7 @@ const AddPersonModal = ({
                     <input
                       type="date"
                       name="dod"
-                      value={formData.dod}
+                      value={formData.dod ?? ""}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -251,9 +257,8 @@ const AddPersonModal = ({
                   </div>
                 )}
 
-                {error && <span>{error}</span>}
-
                 <button
+                  disabled={isCreatingFirstPerson || isAddingRelative}
                   type="submit"
                   className="mt-2 p-4 w-full text-xs text-primary border border-primary rounded rounded-xl hover:bg-primary-light"
                 >

@@ -5,6 +5,8 @@ import type {
   CreateFamilyDto,
   Person,
   RelationshipEdge,
+  FirstPersonPayload,
+  AddRelativePayloadType,
 } from "@familyroot/shared";
 import { queryClient } from "../lib/queryClient";
 
@@ -53,36 +55,65 @@ export const useCreateFamily = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["families"],
-
       });
     },
   });
 };
 
-
-
-export const useDeletePerson = ()=> {
+export const useDeletePerson = () => {
   return useMutation({
-    mutationFn: async ({familyId, personId}: {familyId: string, personId: string})=> {
-      const res = await api.delete(`/families/${familyId}/persons/${personId}`)
-      console.log(res.data)
-      return res.data
-
+    mutationFn: async ({
+      familyId,
+      personId,
+    }: {
+      familyId: string;
+      personId: string;
+    }) => {
+      const res = await api.delete(`/families/${familyId}/persons/${personId}`);
+      console.log(res.data);
+      return res.data;
     },
 
-    onSuccess: (_, variable)=> {
+    onSuccess: (_, variable) => {
       queryClient.invalidateQueries({
-        queryKey: ['persons', variable.familyId]
-
-      })
+        queryKey: ["persons", variable.familyId],
+      });
       queryClient.invalidateQueries({
-        queryKey: ['relationship', variable.familyId]
+        queryKey: ["relationship", variable.familyId],
+      });
+    },
+  });
+};
 
-
-      })
-
+export const useCreateFirstPerson = (familyId: string) => {
+  return useMutation({
+    mutationFn: async (person: FirstPersonPayload) => {
+      const res = await api.post(`/families/${familyId}/persons`, person);
+      return res.data;
     },
 
-  })
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["persons", familyId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["relationship", familyId],
+      });
+    },
+  });
+};
 
-}
+export const useAddRelative = (familyId: string) => {
+  return useMutation({
+    mutationFn: async (payload: AddRelativePayloadType) => {
+      const res = await api.post(`/families/${familyId}/add-relative`, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["persons", familyId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["relationship", familyId] });
+    },
+  });
+};

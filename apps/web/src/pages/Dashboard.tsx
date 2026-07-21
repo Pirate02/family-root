@@ -2,6 +2,8 @@ import { useNavigate } from "react-router";
 import { useCreateFamily, useFamilies } from "../hooks/useFamily";
 import { useState } from "react";
 import { queryClient } from "../lib/queryClient";
+import { toast } from "sonner";
+import { isAxiosError } from "axios";
 
 const Dashboard = () => {
   const token = localStorage.getItem("token");
@@ -18,31 +20,57 @@ const Dashboard = () => {
   const handleCreateFamily = (e: React.SubmitEvent) => {
     e.preventDefault();
 
-    createFamily({
-      name: familyName,
-    });
-
-    console.log(isOpenFamilyForm);
-    console.log("\n");
-    console.log(familyName);
+    createFamily(
+      {
+        name: familyName,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Family created successfully!");
+        },
+        onError: (error) => {
+          if (isAxiosError(error)) {
+            if (error.response?.status === 401) {
+              toast.error("Please please log in to continue.");
+              return;
+            }
+            toast.error(
+              error.response?.data?.error ?? "Something went wrong !",
+            );
+          }
+        },
+      },
+    );
 
     setFamilyName("");
 
     setIsOpenFamilyForm(false);
   };
 
-  const handleLogout =()=> {
-
-    localStorage.removeItem('token')
-    queryClient.clear()
-    navigate('/login')
-
-  }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    queryClient.clear();
+    navigate("/login");
+  };
 
   return (
     <div className="absolute inset-0">
       <div className="w-full flex ">
-        <button onClick={handleLogout} className="border border-primary rounded-xl p-2">Logout</button>
+        {token ? (
+          <button
+            onClick={handleLogout}
+            className="border border-primary rounded-xl p-2"
+          >
+            Logout
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/login")}
+            className="border border-primary rounded-xl p-2"
+          >
+            Login
+          </button>
+        )}
       </div>
       <h1>My Families</h1>
 
@@ -93,11 +121,10 @@ const Dashboard = () => {
           </button>
           <button
             className="border border-primary p-2 rounded rounded-xl bg-red-200"
-            onClick={()=> setIsOpenFamilyForm(false)}
+            onClick={() => setIsOpenFamilyForm(false)}
           >
-          Cancle
+            Cancle
           </button>
-
         </form>
       )}
 
@@ -107,7 +134,6 @@ const Dashboard = () => {
       >
         Create Family
       </button>
-      
     </div>
   );
 };
