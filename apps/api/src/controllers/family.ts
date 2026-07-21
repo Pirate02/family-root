@@ -367,3 +367,74 @@ export const getMyFamilies = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error", err: error });
   }
 };
+
+
+
+
+
+
+export const deletePerson = async (req:Request<{id: string,personId: string}>, res: Response) => {
+
+
+  const {id: familyId, personId} = req.params;
+
+
+
+  try {
+
+    // check if the person is admin 
+
+    const member= await prisma.familyMember.findUnique({
+      where: {familyId_userId : {familyId, userId: req.userId!}}
+
+    })
+
+    if(!member || member.role === 'viewer'){
+      return res.status(403).json({error : "Access denied !"})
+
+
+    }
+
+    // if person has children 
+    const hasChildren = await prisma.relationship.findFirst({
+      where: {personAId: personId, type: 'parent'}
+
+    })
+
+    if(hasChildren){
+      return res.status(409).json({error: "cannot delete a person with children !"})
+
+    }
+
+    // delete all relationships involving this person 
+
+    await prisma.$transaction(async(tx)=> {
+      await tx.relationship.deleteMany({
+        where: {
+          OR: [
+            {personAId: personId},
+            {personBId: personId}
+
+          ]
+
+        }
+
+      })
+
+      await tx.persons.delete({where: {id: personId}})
+
+
+    })
+
+
+    res.status(200).json({message: "Person deleted successfully."})
+    
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({error: "Internal server error"})
+    
+  }
+
+
+
+}

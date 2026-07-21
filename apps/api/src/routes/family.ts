@@ -16,5 +16,6 @@ router.get('/:id/persons', authenticate, getAllFamilyMembers)
 router.post('/:id/relationships',authenticate, createRelationship)
 router.get('/:id/relationships',authenticate, getAllRelationships)
 router.post('/:id/add-relative',authenticate,addRelative)
+router.delete('/:id/persons/:personId',authenticate,addRelative)
 
 export default router;

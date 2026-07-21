@@ -86,11 +86,18 @@ const Dashboard = () => {
 
           <button
             type="submit"
-            className="border border-primary p-2 rounded rounded-xl"
+            className="border border-primary p-2 rounded rounded-xl bg-green-200"
             disabled={isPending}
           >
             {isPending ? "creating.." : "Create"}
           </button>
+          <button
+            className="border border-primary p-2 rounded rounded-xl bg-red-200"
+            onClick={()=> setIsOpenFamilyForm(false)}
+          >
+          Cancle
+          </button>
+
         </form>
       )}
 
@@ -100,6 +107,7 @@ const Dashboard = () => {
       >
         Create Family
       </button>
+      
     </div>
   );
 };

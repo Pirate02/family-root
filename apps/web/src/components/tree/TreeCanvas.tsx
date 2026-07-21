@@ -7,12 +7,17 @@ import type { Person } from "@familyroot/shared";
 import { useState } from "react";
 import AddPersonModal from "./AddPersonModal";
 import PersonSidePanle from "../ui/PersonSidePanle";
+import { useNavigate } from "react-router";
 
 const nodeTypes = {
   personNode: PersonNode,
 };
 
 const TreeCanvas = ({ familyId }: { familyId: string }) => {
+
+  const navigate = useNavigate()
+
+
   const [sidePanelPerson, setSidePanelPerson] = useState<Person | null>(null);
   const { data: persons, isLoading: personLoading } = usePersons(familyId);
   const { data: relationships, isLoading: relLoading } =
@@ -62,6 +67,8 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
   if (persons?.length === 0) {
     return (
       <>
+
+      <button className="border border-primary p-2 rounded rounded-xl" onClick={()=> navigate('/')} >{"<-"}</button>
         <div className="flex items-center justify-center h-screen">
           <button
             onClick={() => setModalOpen(true)}
@@ -85,6 +92,7 @@ const TreeCanvas = ({ familyId }: { familyId: string }) => {
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#faf6f0" }}>
+    <button className="border border-primary p-2 rounded rounded-xl" onClick={()=> navigate('/')} >{"<-"}</button>
       <ReactFlowProvider>
         <ReactFlow
           fitView

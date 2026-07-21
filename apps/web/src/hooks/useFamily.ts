@@ -58,3 +58,31 @@ export const useCreateFamily = () => {
     },
   });
 };
+
+
+
+export const useDeletePerson = ()=> {
+  return useMutation({
+    mutationFn: async ({familyId, personId}: {familyId: string, personId: string})=> {
+      const res = await api.delete(`/families/${familyId}/persons/${personId}`)
+      console.log(res.data)
+      return res.data
+
+    },
+
+    onSuccess: (_, variable)=> {
+      queryClient.invalidateQueries({
+        queryKey: ['persons', variable.familyId]
+
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['relationship', variable.familyId]
+
+
+      })
+
+    },
+
+  })
+
+}
