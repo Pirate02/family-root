@@ -6,29 +6,25 @@ import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-
     try {
       const response = await api.post("/auth/login", { email, password });
-      console.log(response.data);
-      localStorage.setItem('token', response.data.token)
-      toast.success("Loged in")
-
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      toast.success("Logged in");
       navigate("/");
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data.error);
+        toast.error(error.response?.data.error ?? "Something went wrong!");
       } else {
         console.log(error);
-        toast.error("Something went wrong !");
+        toast.error("Something went wrong!");
       }
     } finally {
       setIsLoading(false);
@@ -36,39 +32,73 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#faf6f0] px-4">
+      <button
+        onClick={() => navigate("/")}
+        className="mb-6 font-serif text-lg text-primary-dark"
+      >
+        FamilyRoot
+      </button>
+
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl flex flex-col items-center gap-4"
+        className="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-primary-light bg-white p-8 shadow-lg shadow-primary-dark/5"
       >
-        <h1 className="mb-2 text-3xl font-bold">Welcome!</h1>
-        <div className="flex flex-col gap-4 w-full items-center">
-          <input
-            type="email"
-            name="email"
-            placeholder="example@gmail.com"
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="h-12 w-full rounded border border-gray-300 px-4 outline-none focus:border-blue-500"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="password"
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="h-12 w-full rounded border border-gray-300 px-4 outline-none focus:border-blue-500"
-          />
+        <div className="text-center">
+          <h1 className="font-serif text-2xl text-primary-dark">Welcome back</h1>
+          <p className="mt-1 text-sm text-primary-dark/50">Log in to see your family tree</p>
+        </div>
 
-          <span className="text-xs">Don't have an account ? <span onClick={()=> navigate('/register')} className="text-primary-dark cursor-pointer">register</span></span>
+        <div className="flex w-full flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email" className="text-xs font-medium uppercase tracking-wide text-primary-dark/60">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              required
+              className="h-11 w-full rounded-lg border border-primary-light px-3 text-sm text-primary-dark outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="password" className="text-xs font-medium uppercase tracking-wide text-primary-dark/60">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              required
+              className="h-11 w-full rounded-lg border border-primary-light px-3 text-sm text-primary-dark outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="h-12 w-full rounded-lg bg-primary-light font-semibold text-primary transition hover:bg-primary hover:text-white border border-primary "
+            className="mt-1 h-11 w-full rounded-lg bg-primary text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isLoading ? "Loading.." : "Login"}
-            </button>
+            {isLoading ? "Logging in…" : "Log in"}
+          </button>
+
+          <p className="text-center text-xs text-primary-dark/55">
+            Don't have an account?{" "}
+            <span
+              onClick={() => navigate("/register")}
+              className="cursor-pointer font-medium text-primary hover:text-primary-dark"
+            >
+              Register
+            </span>
+          </p>
         </div>
       </form>
     </div>
