@@ -16,5 +16,7 @@
     // "types": ["node"],
     // and npm install -D @types/node
 
-   }
+   },
+   "include": ["src"],
+   "exclude": ["node modules", "dist", "prisma.config.ts"]
 }
